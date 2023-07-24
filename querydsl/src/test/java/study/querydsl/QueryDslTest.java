@@ -123,7 +123,31 @@ public class QueryDslTest {
         Member fetchFirst = queryFactory
                 .selectFrom(member)
                 .fetchFirst();
-        
+
     }
 
+
+    @Test
+    void sort() {
+        em.persist(new Member(null, 30));
+        em.persist(new Member("member5", 30));
+        em.persist(new Member("member6", 30));
+
+        List<Member> memberList = queryFactory
+                .selectFrom(member)
+                .where(member.age.eq(30))
+                .orderBy(
+                        member.age.desc(),
+                        member.username.asc().nullsLast()
+                )
+                .fetch();
+
+        Member member5 = memberList.get(0);
+        Member member6 = memberList.get(1);
+        Member memberNull = memberList.get(2);
+
+        assertThat(member5.getUsername()).isEqualTo("member5");
+        assertThat(member6.getUsername()).isEqualTo("member6");
+        assertThat(memberNull.getUsername()).isEqualTo(null);
+    }
 }
