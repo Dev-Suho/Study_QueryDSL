@@ -150,4 +150,16 @@ public class QueryDslTest {
         assertThat(member6.getUsername()).isEqualTo("member6");
         assertThat(memberNull.getUsername()).isEqualTo(null);
     }
+
+    @Test
+    void paging() {
+        List<Member> memberList = queryFactory
+                .selectFrom(member)
+                .orderBy(member.username.desc())
+                .offset(1)
+                .limit(2)
+                .fetch();
+
+        assertThat(memberList.size()).isEqualTo(2);
+    }
 }
