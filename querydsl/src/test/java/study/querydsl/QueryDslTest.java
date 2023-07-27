@@ -1,6 +1,7 @@
 package study.querydsl;
 
 import com.querydsl.core.Tuple;
+import com.querydsl.jpa.JPAExpressions;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -299,4 +300,75 @@ public class QueryDslTest {
         assertThat(loaded).isTrue();
     }
 
+    @Test
+    void subQuery() {
+
+        QMember memberSub = new QMember("memberSub");
+
+        List<Member> fetch = queryFactory
+                .selectFrom(member)
+                .where(member.age.eq(
+                        JPAExpressions
+                                .select(memberSub.age.max())
+                                .from(memberSub)
+                ))
+                .fetch();
+
+        assertThat(fetch).extracting("age")
+                .containsExactly(35);
+    }
+
+    @Test
+    void subQueryGoe() {
+
+        QMember memberSub = new QMember("memberSub");
+
+        List<Member> fetch = queryFactory
+                .selectFrom(member)
+                .where(member.age.goe(
+                        JPAExpressions
+                                .select(memberSub.age.avg())
+                                .from(memberSub)
+                ))
+                .fetch();
+
+        assertThat(fetch).extracting("age")
+                .containsExactly(25, 35);
+    }
+
+    @Test
+    void subQueryIn() {
+
+        QMember memberSub = new QMember("memberSub");
+
+        List<Member> fetch = queryFactory
+                .selectFrom(member)
+                .where(member.age.in(
+                        JPAExpressions
+                                .select(memberSub.age)
+                                .from(memberSub)
+                                .where(memberSub.age.gt(15))
+                ))
+                .fetch();
+
+        assertThat(fetch).extracting("age")
+                .containsExactly(25, 20, 35);
+    }
+
+    @Test
+    void selectSubQuery() {
+        QMember memberSub = new QMember("memberSub");
+
+        List<Tuple> result = queryFactory
+                .select(member.username,
+                        JPAExpressions
+                                .select(memberSub.age.avg())
+                                .from(memberSub))
+                .from(member)
+                .fetch();
+
+        for (Tuple tuple : result) {
+            System.out.println("tuple = " + tuple);
+        }
+    }
 }
