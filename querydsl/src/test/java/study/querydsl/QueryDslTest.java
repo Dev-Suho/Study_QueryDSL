@@ -633,4 +633,40 @@ public class QueryDslTest {
 
         assertThat(count).isEqualTo(1);
     }
+
+    @Test
+    void sqlReplaceFunction() {
+        List<String> list = queryFactory
+                .select(Expressions.stringTemplate("function('replace', {0}, {1}, {2})",
+                        member.username, "member", "M"))
+                .from(member)
+                .fetch();
+
+        for (String member : list) {
+            System.out.println("member = " + member);
+        }
+    }
+
+    @Test
+    void sqlLowerFunction() {
+        List<String> list = queryFactory
+                .select(member.username)
+                .from(member)
+                .where(member.username.eq(Expressions.stringTemplate("function('lower', {0})", member.username)))
+                .fetch();
+
+        for (String s : list) {
+            System.out.println("s = " + s);
+        }
+
+        List<String> lowerList = queryFactory
+                .select(member.username)
+                .from(member)
+                .where(member.username.eq(member.username.lower()))
+                .fetch();
+
+        for (String s : lowerList) {
+            System.out.println("s = " + s);
+        }
+    }
 }
