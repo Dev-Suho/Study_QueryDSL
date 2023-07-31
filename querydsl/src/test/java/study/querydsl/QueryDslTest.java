@@ -9,6 +9,7 @@ import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.core.types.dsl.CaseBuilder;
 import com.querydsl.core.types.dsl.Expressions;
 import com.querydsl.jpa.JPAExpressions;
+import com.querydsl.jpa.impl.JPADeleteClause;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -579,5 +580,57 @@ public class QueryDslTest {
 
     private BooleanExpression allEq(String username, Integer age) {
         return usernameEq(username).and(ageEq(age));
+    }
+
+    @Test
+    void bulkUpdate() {
+        // 벌크 연산은 영속성 컨텍스트에 값이 변경되지 않음 -> DB 데이터를 바로 변경
+        long count = queryFactory
+                .update(member)
+                .set(member.username, "비회원")
+                .where(member.age.lt(25))
+                .execute();
+
+        assertThat(count).isEqualTo(2);
+
+        List<Member> memberList = queryFactory
+                .selectFrom(member)
+                .fetch();
+
+        for (Member member : memberList) {
+            System.out.println("member1 = " + member);
+        }
+
+        em.flush();
+        em.clear();
+
+        // 영속성 컨텍스트 초기화 후
+        List<Member> memberList2 = queryFactory
+                .selectFrom(member)
+                .fetch();
+
+        for (Member member2 : memberList2) {
+            System.out.println("member2 = " + member2);
+        }
+    }
+
+    @Test
+    void bulkAdd() {
+        long count = queryFactory
+                .update(member)
+                .set(member.age, member.age.add(1))
+                .execute();
+
+        assertThat(count).isEqualTo(4);
+    }
+
+    @Test
+    void bulkDelete() {
+        long count = queryFactory
+                .delete(member)
+                .where(member.age.lt(16))
+                .execute();
+
+        assertThat(count).isEqualTo(1);
     }
 }
