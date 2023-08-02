@@ -669,4 +669,5 @@ public class QueryDslTest {
             System.out.println("s = " + s);
         }
     }
+
 }
